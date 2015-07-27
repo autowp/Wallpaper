@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">AutoWP.ru</string>
+
+    <string name="update_wallpaper">Update wallpaper now</string>
+    <string name="shared_prefences_main">main</string>
+    <string name="status_download_picture_info">Download picture information ...</string>
+    <string name="status_error">Error: %s</string>
+    <string name="status_picture_same">Picture still same</string>
+    <string name="status_download_picture">Download picture %s ...</string>
+    <string name="status_converting">Converting ...</string>
+    <string name="status_setting_wallpaper">Setting as wallpaper ...</string>
+    <string name="status_complete">Complete</string>
+    <string name="radio_disabled">Disabled</string>
+    <string name="radio_car_of_day_picture">Car of the day (daily)</string>
+    <string name="radio_new_picture">New picture (hourly)</string>
+    <string name="radio_random_picture">Random picture (hourly)</string>
+</resources>
