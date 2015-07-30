@@ -14,4 +14,5 @@
     <string name="radio_car_of_day_picture">Car of the day (daily)</string>
     <string name="radio_new_picture">New picture (hourly)</string>
     <string name="radio_random_picture">Random picture (hourly)</string>
+    <string name="error_json_downlod_failed">Picture information download failed</string>
 </resources>

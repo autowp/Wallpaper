@@ -15,4 +15,5 @@
     <string name="radio_car_of_day_picture">Автомобиль дня (раз в день)</string>
     <string name="radio_new_picture">Новые изображения (раз в час)</string>
     <string name="radio_random_picture">Случайное изображение (раз в час)</string>
+    <string name="error_json_downlod_failed">Picture information download failed</string>
 </resources>

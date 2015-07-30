@@ -66,15 +66,17 @@ public class WallpaperSwitcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        System.out.println("onStartCommand " + intent.getAction());
-        switch(intent.getAction()) {
-            case "doSwitch":
-                doSwitch();
-                break;
-            case "startAlarmAndDoSwitch":
-                doSwitch();
-                startAlarm();
-                break;
+        if (intent != null) {
+            System.out.println("onStartCommand " + intent.getAction());
+            switch (intent.getAction()) {
+                case "doSwitch":
+                    doSwitch();
+                    break;
+                case "startAlarmAndDoSwitch":
+                    doSwitch();
+                    startAlarm();
+                    break;
+            }
         }
         return 0;
     }
@@ -154,6 +156,11 @@ public class WallpaperSwitcherService extends Service {
         @Override
         protected void onPostExecute(String strJson) {
             super.onPostExecute(strJson);
+
+            if (strJson == null) {
+                setStatusText(getString(com.autowp.wallpaper.R.string.error_json_downlod_failed));
+                return;
+            }
 
             try {
                 JSONObject dataJsonObj = new JSONObject(strJson);
