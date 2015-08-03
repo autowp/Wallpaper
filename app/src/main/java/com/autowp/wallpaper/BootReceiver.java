@@ -14,7 +14,7 @@ public class BootReceiver extends BroadcastReceiver {
         System.out.println("BootReceiver.onReceive");
 
         Intent serviceIntent = new Intent(context, WallpaperSwitcherService.class);
-        serviceIntent.setAction("startAlarmAndDoSwitch");
+        serviceIntent.setAction(WallpaperSwitcherService.ACTION_ALARM_AND_DO);
         context.startService(serviceIntent);
     }
 }

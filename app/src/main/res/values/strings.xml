@@ -10,9 +10,10 @@
     <string name="status_converting">Converting ...</string>
     <string name="status_setting_wallpaper">Setting as wallpaper ...</string>
     <string name="status_complete">Complete</string>
-    <string name="radio_disabled">Disabled</string>
-    <string name="radio_car_of_day_picture">Car of the day (daily)</string>
-    <string name="radio_new_picture">New picture (hourly)</string>
-    <string name="radio_random_picture">Random picture (hourly)</string>
     <string name="error_json_downlod_failed">Picture information download failed</string>
+    <string name="wifi_only_summary">For mobile data traffic may incur additional fees</string>
+    <string name="wifi_only_title">Download via wi-fi &amp; ethernet only</string>
+    <string name="mode_title">Mode</string>
+    <string name="mode_summary">Select one preffered</string>
+
 </resources>

@@ -1,19 +1,20 @@
 package com.autowp.wallpaper;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
 
-public class MainActivity extends Activity implements ServiceConnection, WallpaperSwitcherService.WallpaperSwitcherListener {
+public class MainActivity extends AppCompatActivity implements ServiceConnection, WallpaperSwitcherService.WallpaperSwitcherListener {
     private WallpaperSwitcherService mService;
     private boolean serviceIsBound = false;
 
@@ -24,14 +25,36 @@ public class MainActivity extends Activity implements ServiceConnection, Wallpap
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onResume()
     {
         super.onResume();
 
+        System.out.println("Resume");
+        System.out.println(serviceIsBound);
+
         if (!serviceIsBound) {
+            System.out.println("Bounding");
             Intent intent = new Intent(this, WallpaperSwitcherService.class);
-            System.out.println("MainActivity.bindService");
-            bindService(intent, this, Context.BIND_AUTO_CREATE);
+            getApplicationContext().bindService(intent, this, Context.BIND_AUTO_CREATE);
             serviceIsBound = true;
         }
     }
@@ -42,110 +65,51 @@ public class MainActivity extends Activity implements ServiceConnection, Wallpap
 
         if (serviceIsBound) {
             if (mService != null) {
+                System.out.println("removeEventListener");
                 mService.removeEventListener(this);
             }
 
-            this.unbindService(this);
+            getApplicationContext().unbindService(this);
             mService = null;
             serviceIsBound = false;
         }
     }
 
     public void updateWallpaper(View view) {
-        System.out.println("updateWallpaper");
-        mService.doSwitch();
-    }
-
-    public void onRadioButtonClicked(View view) {
-        boolean checked = ((RadioButton) view).isChecked();
-
-        if (checked) {
-            mService.stopAlarm();
-
-            SharedPreferences settings = getSharedPreferences(WallpaperSwitcherService.PREFENCES_MAIN, 0);
-            settings.edit()
-                .putInt(WallpaperSwitcherService.PREFENCES_MAIN_MODE, view.getId())
-                .apply();
-
-            View updateButton = findViewById(R.id.update_now);
-
-            switch (view.getId()) {
-                case R.id.radiogroup_mode_car_of_day_picture:
-                    updateButton.setEnabled(true);
-                    mService.setMode(WallpaperSwitcherService.MODE_CAR_OF_DAY_PICTURE);
-                    break;
-                case R.id.radiogroup_mode_new_picture:
-                    updateButton.setEnabled(true);
-                    mService.setMode(WallpaperSwitcherService.MODE_NEW_PICTURE);
-                    break;
-                case R.id.radiogroup_mode_random_picture:
-                    updateButton.setEnabled(true);
-                    mService.setMode(WallpaperSwitcherService.MODE_RANDOM_PICTURE);
-                    break;
-                case R.id.radiogroup_mode_disabled:
-                default:
-                    updateButton.setEnabled(false);
-                    mService.setMode(WallpaperSwitcherService.MODE_DISABLED);
-                    break;
-            }
-        }
+        Intent serviceIntent = new Intent(this, WallpaperSwitcherService.class);
+        serviceIntent.setAction(WallpaperSwitcherService.ACTION_DO);
+        startService(serviceIntent);
     }
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
+        System.out.println("onServiceConnected");
         WallpaperSwitcherService.LocalBinder binder = (WallpaperSwitcherService.LocalBinder) service;
         mService = binder.getService();
-        System.out.println("MainActivity.onServiceConnected");
+
+        System.out.println("addEventListener");
         mService.addEventListener(this);
 
+        System.out.println("setEnabled");
+        System.out.println(!mService.isProcessing());
+
         View updateNow = findViewById(R.id.update_now);
-        RadioButton radio1 = (RadioButton)findViewById(R.id.radiogroup_mode_disabled);
-        RadioButton radio2 = (RadioButton)findViewById(R.id.radiogroup_mode_car_of_day_picture);
-        RadioButton radio3 = (RadioButton)findViewById(R.id.radiogroup_mode_new_picture);
-        RadioButton radio4 = (RadioButton)findViewById(R.id.radiogroup_mode_random_picture);
+        updateNow.setEnabled(!mService.isProcessing());
 
-        radio1.setEnabled(true);
-        radio2.setEnabled(true);
-        radio3.setEnabled(true);
-        radio4.setEnabled(true);
+        View progress = findViewById(R.id.progressBar);
+        progress.setVisibility(mService.isProcessing() ? View.VISIBLE : View.INVISIBLE);
 
-        switch (mService.getMode()) {
-            case WallpaperSwitcherService.MODE_CAR_OF_DAY_PICTURE:
-                radio2.setChecked(true);
-                updateNow.setEnabled(true);
-                break;
-            case WallpaperSwitcherService.MODE_NEW_PICTURE:
-                radio3.setChecked(true);
-                updateNow.setEnabled(true);
-                break;
-            case WallpaperSwitcherService.MODE_RANDOM_PICTURE:
-                radio4.setChecked(true);
-                updateNow.setEnabled(true);
-                break;
-            case WallpaperSwitcherService.MODE_DISABLED:
-            default:
-                radio1.setChecked(true);
-                updateNow.setEnabled(false);
-                break;
-        }
+        TextView tvStatus = (TextView) findViewById(R.id.text_status);
+        tvStatus.setText(mService.getStatusTest());
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        System.out.println("MainActivity.onServiceDisconnected");
+        System.out.println("removeEventListener");
         mService.removeEventListener(this);
         mService = null;
 
         View updateNow = findViewById(R.id.update_now);
-        RadioButton radio1 = (RadioButton)findViewById(R.id.radiogroup_mode_disabled);
-        RadioButton radio2 = (RadioButton)findViewById(R.id.radiogroup_mode_car_of_day_picture);
-        RadioButton radio3 = (RadioButton)findViewById(R.id.radiogroup_mode_new_picture);
-        RadioButton radio4 = (RadioButton)findViewById(R.id.radiogroup_mode_random_picture);
-
-        radio1.setEnabled(false);
-        radio2.setEnabled(false);
-        radio3.setEnabled(false);
-        radio4.setEnabled(false);
         updateNow.setEnabled(false);
     }
 
@@ -159,4 +123,20 @@ public class MainActivity extends Activity implements ServiceConnection, Wallpap
             }
         });
     }
+
+    @Override
+    public void handleLoadingStateChanges(final boolean isLoading) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                View updateNow = findViewById(R.id.update_now);
+                updateNow.setEnabled(!isLoading);
+
+                View progress = findViewById(R.id.progressBar);
+                progress.setVisibility(isLoading ? View.VISIBLE : View.INVISIBLE);
+            }
+        });
+    }
+
 }

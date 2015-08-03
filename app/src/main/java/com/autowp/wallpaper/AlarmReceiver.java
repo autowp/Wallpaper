@@ -13,7 +13,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         System.out.println("AlarmReceiver.onReceive");
 
         Intent serviceIntent = new Intent(context, WallpaperSwitcherService.class);
-        serviceIntent.setAction("doSwitch");
+        serviceIntent.setAction(WallpaperSwitcherService.ACTION_DO);
         context.startService(serviceIntent);
     }
 }

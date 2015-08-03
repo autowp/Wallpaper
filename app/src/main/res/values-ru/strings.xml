@@ -6,14 +6,14 @@
     <string name="shared_prefences_main">main</string>
     <string name="status_download_picture_info">Получение информации об изображении ...</string>
     <string name="status_error">Ошибка: %s</string>
-    <string name="status_picture_same">Изобраение не изменено</string>
+    <string name="status_picture_same">Изображение не изменено</string>
     <string name="status_download_picture">Скачивание изображения %s ...</string>
     <string name="status_converting">Преобразование ...</string>
     <string name="status_setting_wallpaper">Установка в качестве фоновой картинки ...</string>
     <string name="status_complete">Готово</string>
-    <string name="radio_disabled">Отключено</string>
-    <string name="radio_car_of_day_picture">Автомобиль дня (раз в день)</string>
-    <string name="radio_new_picture">Новые изображения (раз в час)</string>
-    <string name="radio_random_picture">Случайное изображение (раз в час)</string>
-    <string name="error_json_downlod_failed">Picture information download failed</string>
+    <string name="error_json_downlod_failed">Ошибка при загрузке информации об изображении</string>
+    <string name="wifi_only_summary">За мобильный трафик может взиматься дополнительная плата</string>
+    <string name="wifi_only_title">Скачивать только по wi-fi и ethernet</string>
+    <string name="mode_title">Режим работы</string>
+    <string name="mode_summary">Ввберите ...</string>
 </resources>

@@ -15,8 +15,8 @@ android {
         applicationId "com.autowp.wallpaper"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 3
-        versionName "3a"
+        versionCode 5
+        versionName "5a"
     }
     buildTypes {
         release {

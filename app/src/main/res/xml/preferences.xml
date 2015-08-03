@@ -1,0 +1,23 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Режим работы">
+
+        <ListPreference
+            android:key="mode"
+            android:title="@string/mode_title"
+            android:summary="@string/mode_summary"
+            android:entries="@array/mode_entries"
+            android:entryValues="@array/mode_entry_values"
+            android:defaultValue="0" />
+
+        <CheckBoxPreference
+            android:key="wifi_only"
+            android:title="@string/wifi_only_title"
+            android:summary="@string/wifi_only_summary"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

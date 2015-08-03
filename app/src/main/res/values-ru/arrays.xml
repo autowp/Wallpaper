@@ -1,0 +1,16 @@
+<resources>
+
+    <string-array name="mode_entries">
+        <item>Отключено</item>
+        <item>Автомобиль дня (раз в день)</item>
+        <item>Новые изображения (раз в час)</item>
+        <item>Случайное изображение (раз в час)</item>
+    </string-array>
+
+    <string-array name="mode_entry_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+</resources>

@@ -7,42 +7,6 @@
     android:orientation="vertical"
     >
 
-    <RadioGroup
-        android:id="@+id/radiogroup_mode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
-        <RadioButton
-            android:id="@+id/radiogroup_mode_disabled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/radio_disabled"
-            android:onClick="onRadioButtonClicked"
-            android:enabled="false"/>
-        <RadioButton
-            android:id="@+id/radiogroup_mode_car_of_day_picture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/radio_car_of_day_picture"
-            android:onClick="onRadioButtonClicked"
-            android:enabled="false"/>
-        <RadioButton
-            android:id="@+id/radiogroup_mode_new_picture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/radio_new_picture"
-            android:onClick="onRadioButtonClicked"
-            android:enabled="false"/>
-        <RadioButton
-            android:id="@+id/radiogroup_mode_random_picture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/radio_random_picture"
-            android:onClick="onRadioButtonClicked"
-            android:enabled="false"/>
-    </RadioGroup>
-
     <Button
         android:id="@+id/update_now"
         android:layout_width="wrap_content"
@@ -50,12 +14,19 @@
         android:onClick="updateWallpaper"
         android:text="@string/update_wallpaper"
         android:enabled="false"
-        />
+        android:layout_gravity="center_horizontal" />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_gravity="center_horizontal"
+        android:visibility="invisible" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/text_status"
-        />
+        android:layout_gravity="center_horizontal" />
 
 </LinearLayout>

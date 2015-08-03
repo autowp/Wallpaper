@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
@@ -27,16 +29,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+
 /**
  * Created by Dmitry on 25.07.2015.
  */
 public class WallpaperSwitcherService extends Service {
 
+    public static final String ACTION_DO = "doSwitch";
+    public static final String ACTION_ALARM_AND_DO = "startAlarmAndDoSwitch";
+
     private static final String URL_NEW_PICTURE = "http://en.autowp.ru/api/picture/new-picture";
     private static final String URL_CAR_OF_DAY_PICTURE = "http://en.autowp.ru/api/picture/car-of-day-picture";
     private static final String URL_RANDOM_PICTURE = "http://en.autowp.ru/api/picture/random-picture";
 
-    public static final String PREFENCES_MAIN = "main";
     public static final String PREFENCES_MAIN_MODE = "mode";
     private static final String PREFENCES_URL = "url";
 
@@ -48,6 +54,7 @@ public class WallpaperSwitcherService extends Service {
     public static final int CHECK_PERIOD = 3600000;
 
     private String mStatusText = null;
+    private boolean isProcessing = false;
 
     private PendingIntent mPendingIntent;
     private SharedPreferences mSettings;
@@ -69,10 +76,10 @@ public class WallpaperSwitcherService extends Service {
         if (intent != null) {
             System.out.println("onStartCommand " + intent.getAction());
             switch (intent.getAction()) {
-                case "doSwitch":
+                case ACTION_DO:
                     doSwitch();
                     break;
-                case "startAlarmAndDoSwitch":
+                case ACTION_ALARM_AND_DO:
                     doSwitch();
                     startAlarm();
                     break;
@@ -83,14 +90,16 @@ public class WallpaperSwitcherService extends Service {
 
     public interface WallpaperSwitcherListener {
         void handleStatusChanged(String status);
+
+        void handleLoadingStateChanges(boolean isLoading);
     }
 
-    private List<WallpaperSwitcherListener> mWallpaperSwitcherListeners =
+    private List<WallpaperSwitcherListener> mEventListeners =
             new ArrayList<>();
 
     public void onCreate(){
         super.onCreate();
-        mSettings = getSharedPreferences(PREFENCES_MAIN, 0);
+        mSettings = getDefaultSharedPreferences(getApplicationContext());
         mWallpaperManager = WallpaperManager.getInstance(this);
         mPendingIntent = PendingIntent.getBroadcast(this, 0, getAlarmIntent(), 0);
     }
@@ -100,16 +109,22 @@ public class WallpaperSwitcherService extends Service {
     }
 
     public synchronized void addEventListener(WallpaperSwitcherListener listener) {
-        mWallpaperSwitcherListeners.add(listener);
+        mEventListeners.add(listener);
     }
 
     public synchronized void removeEventListener(WallpaperSwitcherListener listener){
-        mWallpaperSwitcherListeners.remove(listener);
+        mEventListeners.remove(listener);
     }
 
-    private synchronized void fireEvent()
-    {
-        Iterator<WallpaperSwitcherListener> i = mWallpaperSwitcherListeners.iterator();
+    private synchronized void fireLoadingStateEvent() {
+        Iterator<WallpaperSwitcherListener> i = mEventListeners.iterator();
+        while(i.hasNext()) {
+            i.next().handleLoadingStateChanges(isProcessing);
+        }
+    }
+
+    private synchronized void fireStatusEvent() {
+        Iterator<WallpaperSwitcherListener> i = mEventListeners.iterator();
         while(i.hasNext()) {
             i.next().handleStatusChanged(mStatusText);
         }
@@ -238,14 +253,10 @@ public class WallpaperSwitcherService extends Service {
                 System.out.println(String.format("Crop to %d %d %d %d", cropLeft, cropTop, cropWidth, cropHeight));
 
                 Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, cropLeft, cropTop, cropWidth, cropHeight);
-                bitmap.recycle();
-                bitmap = null;
 
                 System.out.println(String.format("Scale to %d %d", displayWidth.intValue(), displayHeight.intValue()));
 
                 Bitmap scaledBitmap = Bitmap.createScaledBitmap(croppedBitmap, displayWidth.intValue(), displayHeight.intValue(), true);
-                croppedBitmap.recycle();
-                croppedBitmap = null;
 
                 setStatusText(getString(R.string.status_setting_wallpaper));
 
@@ -257,22 +268,57 @@ public class WallpaperSwitcherService extends Service {
 
                 setStatusText(getString(R.string.status_complete));
 
+                bitmap.recycle();
+                croppedBitmap.recycle();
+                bitmap = null;
+                croppedBitmap = null;
+
             } catch (Exception e) {
                 setStatusText(String.format(getString(R.string.status_error), e.getMessage()));
             }
 
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void a) {
+            super.onPostExecute(a);
+
+            isProcessing = false;
+            fireLoadingStateEvent();
+        }
     }
 
     private void setStatusText(final String status) {
         System.out.println(status);
         mStatusText = status;
-        fireEvent();
+        fireStatusEvent();
     }
 
-    public void doSwitch() {
+    public String getStatusTest() {
+        return mStatusText;
+    }
+
+    public synchronized void doSwitch() {
         System.out.println("doSwitch");
+
+
+        if (isProcessing) {
+            System.out.println("Already running");
+            return;
+        }
+
+        boolean wifiOnly = mSettings.getBoolean("wifi_only", true);
+        if (wifiOnly) {
+            ConnectivityManager connectivityMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo net = connectivityMgr.getActiveNetworkInfo();
+            int netType = net.getType();
+            if (netType != ConnectivityManager.TYPE_WIFI && netType != ConnectivityManager.TYPE_ETHERNET) {
+                System.out.println("Cancel because mobile connection");
+                return;
+            }
+        }
+
         WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
@@ -286,15 +332,21 @@ public class WallpaperSwitcherService extends Service {
             windowManager.getDefaultDisplay().getMetrics(displayMetrics);
         }
 
-        switch (mSettings.getInt(PREFENCES_MAIN_MODE, 0)) {
+        switch (Integer.parseInt(mSettings.getString(PREFENCES_MAIN_MODE, "0"))) {
             case MODE_RANDOM_PICTURE:
+                isProcessing = true;
+                fireLoadingStateEvent();
                 new DownloadJsonTask(displayMetrics, URL_RANDOM_PICTURE).execute();
                 break;
             case MODE_NEW_PICTURE:
+                isProcessing = true;
+                fireLoadingStateEvent();
                 new DownloadJsonTask(displayMetrics, URL_NEW_PICTURE).execute();
                 break;
 
             case MODE_CAR_OF_DAY_PICTURE:
+                isProcessing = true;
+                fireLoadingStateEvent();
                 new DownloadJsonTask(displayMetrics, URL_CAR_OF_DAY_PICTURE).execute();
                 break;
 
@@ -315,6 +367,7 @@ public class WallpaperSwitcherService extends Service {
     }
 
     public void stopAlarm() {
+        System.out.println("Stop alarm");
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(mPendingIntent);
     }
@@ -337,5 +390,9 @@ public class WallpaperSwitcherService extends Service {
             System.out.println("setInexactRepeating");
             alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, mPendingIntent);
         }
+    }
+
+    public boolean isProcessing() {
+        return isProcessing;
     }
 }
