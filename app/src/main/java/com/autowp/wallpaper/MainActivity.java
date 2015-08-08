@@ -48,11 +48,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     {
         super.onResume();
 
-        System.out.println("Resume");
-        System.out.println(serviceIsBound);
-
         if (!serviceIsBound) {
-            System.out.println("Bounding");
             Intent intent = new Intent(this, WallpaperSwitcherService.class);
             getApplicationContext().bindService(intent, this, Context.BIND_AUTO_CREATE);
             serviceIsBound = true;
@@ -65,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         if (serviceIsBound) {
             if (mService != null) {
-                System.out.println("removeEventListener");
                 mService.removeEventListener(this);
             }
 
@@ -81,20 +76,23 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         startService(serviceIntent);
     }
 
+    public void gotoSettings(View view) {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        System.out.println("onServiceConnected");
         WallpaperSwitcherService.LocalBinder binder = (WallpaperSwitcherService.LocalBinder) service;
         mService = binder.getService();
 
-        System.out.println("addEventListener");
         mService.addEventListener(this);
 
-        System.out.println("setEnabled");
-        System.out.println(!mService.isProcessing());
-
         View updateNow = findViewById(R.id.update_now);
-        updateNow.setEnabled(!mService.isProcessing());
+        System.out.println(mService.isProcessing());
+        System.out.println(mService.getMode().equals(WallpaperSwitcherService.MODE_DISABLED));
+        boolean disabled = mService.isProcessing() || mService.getMode().equals(WallpaperSwitcherService.MODE_DISABLED);
+        updateNow.setEnabled(!disabled);
 
         View progress = findViewById(R.id.progressBar);
         progress.setVisibility(mService.isProcessing() ? View.VISIBLE : View.INVISIBLE);
@@ -105,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        System.out.println("removeEventListener");
         mService.removeEventListener(this);
         mService = null;
 

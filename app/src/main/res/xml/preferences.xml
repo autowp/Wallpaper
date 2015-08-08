@@ -18,6 +18,20 @@
             android:summary="@string/wifi_only_summary"
             android:defaultValue="true" />
 
+        <Preference
+            android:key="last_picture_name"
+            android:title="@string/last_picture_name"
+
+            android:defaultValue="None"/>
+
+        <EditTextPreference
+            android:key="version"
+            android:title="@string/version"
+            android:enabled="false"
+            android:selectable="false"
+            android:persistent="false"
+            android:shouldDisableView="false"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

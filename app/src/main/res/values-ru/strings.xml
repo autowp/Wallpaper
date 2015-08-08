@@ -16,4 +16,7 @@
     <string name="wifi_only_title">Скачивать только по wi-fi и ethernet</string>
     <string name="mode_title">Режим работы</string>
     <string name="mode_summary">Ввберите ...</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="version">Версия</string>
+    <string name="last_picture_name">Последнее установленное изображение</string>
 </resources>

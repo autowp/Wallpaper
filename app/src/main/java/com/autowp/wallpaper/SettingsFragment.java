@@ -3,7 +3,10 @@ package com.autowp.wallpaper;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
@@ -23,7 +26,19 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         SharedPreferences settings = getDefaultSharedPreferences(getActivity().getApplicationContext());
         settings.registerOnSharedPreferenceChangeListener(this);
 
+
+        Context context = getActivity().getApplicationContext();
+        EditTextPreference versionPref = (EditTextPreference)findPreference("version");
+        try {
+            String version = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+            versionPref.setTitle(getString(R.string.version) + ": " + version);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
         updateModeSummary();
+        updateLastImage();
+
     }
 
     @Override
@@ -34,10 +49,28 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onDestroy();
     }
 
+    private void updateLastImage() {
+        SharedPreferences sharedPreferences = getDefaultSharedPreferences(getActivity().getApplicationContext());
+        Preference pref = findPreference(WallpaperSwitcherService.PREFENCES_NAME);
+
+        String name = sharedPreferences.getString(WallpaperSwitcherService.PREFENCES_NAME, "");
+        String url = sharedPreferences.getString(WallpaperSwitcherService.PREFENCES_PAGE_URL, "");
+
+        if (name.length() > 0 && url.length() > 0) {
+            pref.setSummary(name + "\n" + url);
+
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            pref.setIntent(browserIntent);
+        }
+    }
+
     private void updateModeSummary() {
         SharedPreferences sharedPreferences = getDefaultSharedPreferences(getActivity().getApplicationContext());
         Preference connectionPref = findPreference(WallpaperSwitcherService.PREFENCES_MAIN_MODE);
-        int value = Integer.parseInt(sharedPreferences.getString(WallpaperSwitcherService.PREFENCES_MAIN_MODE, "0"));
+        int value = Integer.parseInt(sharedPreferences.getString(
+                WallpaperSwitcherService.PREFENCES_MAIN_MODE,
+                WallpaperSwitcherService.MODE_DISABLED
+        ));
         String[] entries = getResources().getStringArray(R.array.mode_entries);
         String valueStr = "";
         if (value < entries.length) {
@@ -58,6 +91,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             Intent serviceIntent = new Intent(context, WallpaperSwitcherService.class);
             serviceIntent.setAction(WallpaperSwitcherService.ACTION_DO);
             context.startService(serviceIntent);
+        } else if (key.equals(WallpaperSwitcherService.PREFENCES_NAME)) {
+            updateLastImage();
         }
     }
 }

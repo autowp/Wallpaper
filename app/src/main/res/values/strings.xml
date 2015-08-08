@@ -15,5 +15,8 @@
     <string name="wifi_only_title">Download via wi-fi &amp; ethernet only</string>
     <string name="mode_title">Mode</string>
     <string name="mode_summary">Select one preffered</string>
+    <string name="menu_settings">Settings</string>
+    <string name="version">Version</string>
+    <string name="last_picture_name">Last installed picture</string>
 
 </resources>
