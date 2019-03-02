@@ -51,10 +51,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     private void updateLastImage() {
         SharedPreferences sharedPreferences = getDefaultSharedPreferences(getActivity().getApplicationContext());
-        Preference pref = findPreference(WallpaperSwitcherService.PREFENCES_NAME);
+        Preference pref = findPreference(WallpaperSwitcherService.PREFERENCES_NAME);
 
-        String name = sharedPreferences.getString(WallpaperSwitcherService.PREFENCES_NAME, "");
-        String url = sharedPreferences.getString(WallpaperSwitcherService.PREFENCES_PAGE_URL, "");
+        String name = sharedPreferences.getString(WallpaperSwitcherService.PREFERENCES_NAME, "");
+        String url = sharedPreferences.getString(WallpaperSwitcherService.PREFERENCES_PAGE_URL, "");
 
         if (name.length() > 0 && url.length() > 0) {
             pref.setSummary(name + "\n" + url);
@@ -66,9 +66,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     private void updateModeSummary() {
         SharedPreferences sharedPreferences = getDefaultSharedPreferences(getActivity().getApplicationContext());
-        Preference connectionPref = findPreference(WallpaperSwitcherService.PREFENCES_MAIN_MODE);
+        Preference connectionPref = findPreference(WallpaperSwitcherService.PREFERENCES_MAIN_MODE);
         int value = Integer.parseInt(sharedPreferences.getString(
-                WallpaperSwitcherService.PREFENCES_MAIN_MODE,
+                WallpaperSwitcherService.PREFERENCES_MAIN_MODE,
                 WallpaperSwitcherService.MODE_DISABLED
         ));
         String[] entries = getResources().getStringArray(R.array.mode_entries);
@@ -82,7 +82,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(WallpaperSwitcherService.PREFENCES_MAIN_MODE)) {
+        if (key.equals(WallpaperSwitcherService.PREFERENCES_MAIN_MODE)) {
 
             updateModeSummary();
 
@@ -91,7 +91,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             Intent serviceIntent = new Intent(context, WallpaperSwitcherService.class);
             serviceIntent.setAction(WallpaperSwitcherService.ACTION_DO);
             context.startService(serviceIntent);
-        } else if (key.equals(WallpaperSwitcherService.PREFENCES_NAME)) {
+        } else if (key.equals(WallpaperSwitcherService.PREFERENCES_NAME)) {
             updateLastImage();
         }
     }

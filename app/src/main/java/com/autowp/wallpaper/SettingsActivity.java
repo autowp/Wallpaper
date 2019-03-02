@@ -2,7 +2,6 @@ package com.autowp.wallpaper;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 
 /**
  * Created by Dmitry on 03.08.2015.

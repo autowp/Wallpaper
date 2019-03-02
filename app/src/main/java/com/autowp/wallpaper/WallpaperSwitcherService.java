@@ -15,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.WindowManager;
 
 import org.json.JSONException;
@@ -26,7 +27,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
@@ -39,14 +39,14 @@ public class WallpaperSwitcherService extends Service {
     public static final String ACTION_DO = "doSwitch";
     public static final String ACTION_ALARM_AND_DO = "startAlarmAndDoSwitch";
 
-    private static final String URL_NEW_PICTURE = "http://en.autowp.ru/api/picture/new-picture";
-    private static final String URL_CAR_OF_DAY_PICTURE = "http://en.autowp.ru/api/picture/car-of-day-picture";
-    private static final String URL_RANDOM_PICTURE = "http://en.autowp.ru/api/picture/random-picture";
+    private static final String URL_NEW_PICTURE = "https://en.wheelsage.org/api/picture/new-picture";
+    private static final String URL_CAR_OF_DAY_PICTURE = "https://en.wheelsage.org/api/picture/car-of-day-picture";
+    private static final String URL_RANDOM_PICTURE = "https://en.wheelsage.org/api/picture/random-picture";
 
-    public static final String PREFENCES_MAIN_MODE = "mode";
-    private static final String PREFENCES_URL = "url";
-    public static final String PREFENCES_PAGE_URL = "last_picture_page";
-    public static final String PREFENCES_NAME = "last_picture_name";
+    public static final String PREFERENCES_MAIN_MODE = "mode";
+    private static final String PREFERENCES_URL = "url";
+    public static final String PREFERENCES_PAGE_URL = "last_picture_page";
+    public static final String PREFERENCES_NAME = "last_picture_name";
 
     public static final String MODE_DISABLED = "0";
     public static final String MODE_CAR_OF_DAY_PICTURE = "1";
@@ -75,7 +75,7 @@ public class WallpaperSwitcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
+        if (intent != null && intent.getAction() != null) {
             switch (intent.getAction()) {
                 case ACTION_DO:
                     doSwitch();
@@ -86,7 +86,7 @@ public class WallpaperSwitcherService extends Service {
                     break;
             }
         }
-        return 0;
+        return Service.START_STICKY_COMPATIBILITY;
     }
 
     public interface WallpaperSwitcherListener {
@@ -118,23 +118,21 @@ public class WallpaperSwitcherService extends Service {
     }
 
     private synchronized void fireLoadingStateEvent() {
-        Iterator<WallpaperSwitcherListener> i = mEventListeners.iterator();
-        while(i.hasNext()) {
-            i.next().handleLoadingStateChanges(isProcessing);
+        for (WallpaperSwitcherListener handler: mEventListeners) {
+            handler.handleLoadingStateChanges(isProcessing);
         }
     }
 
     private synchronized void fireStatusEvent() {
-        Iterator<WallpaperSwitcherListener> i = mEventListeners.iterator();
-        while(i.hasNext()) {
-            i.next().handleStatusChanged(mStatusText);
+        for (WallpaperSwitcherListener handler: mEventListeners) {
+            handler.handleStatusChanged(mStatusText);
         }
     }
 
     private class DownloadJsonTask extends AsyncTask<Void, Void, String> {
         String mJsonUrl;
         DisplayMetrics mDisplayMetrics;
-        public DownloadJsonTask(DisplayMetrics displayMetrics, String url) {
+        private DownloadJsonTask(DisplayMetrics displayMetrics, String url) {
             mDisplayMetrics = displayMetrics;
             mJsonUrl = url;
         }
@@ -184,30 +182,29 @@ public class WallpaperSwitcherService extends Service {
 
                 boolean status = dataJsonObj.getBoolean("status");
 
-                if (status) {
-                    String url = dataJsonObj.getString("url");
-                    String name = dataJsonObj.getString("name");
-                    String pageUrl = dataJsonObj.getString("page");
-
-                    String oldImageUrl = mSettings.getString(PREFENCES_URL, null);
-
-                    if (oldImageUrl == null || !oldImageUrl.contentEquals(url)) {
-                        new DownloadImageTask(mDisplayMetrics, url, name, pageUrl).execute();
-                    } else {
-                        setStatusText(getString(R.string.status_picture_same));
-                        resetIsProcessing();
-                        return;
-                    }
-                } else {
+                if (! status) {
                     setStatusText(getString(com.autowp.wallpaper.R.string.error_json_downlod_failed));
                     resetIsProcessing();
                     return;
                 }
 
+                String url = dataJsonObj.getString("url");
+                String name = dataJsonObj.getString("name");
+                String pageUrl = dataJsonObj.getString("page");
+
+                String oldImageUrl = mSettings.getString(PREFERENCES_URL, null);
+
+                if (oldImageUrl != null && oldImageUrl.contentEquals(url)) {
+                    setStatusText(getString(R.string.status_picture_same));
+                    resetIsProcessing();
+                    return;
+                }
+
+                new DownloadImageTask(mDisplayMetrics, url, name, pageUrl).execute();
+
             } catch (JSONException e) {
                 setStatusText(String.format(getString(R.string.status_error), e.getMessage()));
                 resetIsProcessing();
-                return;
             }
         }
     }
@@ -217,7 +214,7 @@ public class WallpaperSwitcherService extends Service {
         private final String mPageUrl;
         String mImageUrl;
         DisplayMetrics mDisplayMetrics;
-        public DownloadImageTask(DisplayMetrics displayMetrics, String url, String name, String pageUrl) {
+        private DownloadImageTask(DisplayMetrics displayMetrics, String url, String name, String pageUrl) {
             mDisplayMetrics = displayMetrics;
             mImageUrl = url;
             mName = name;
@@ -273,17 +270,15 @@ public class WallpaperSwitcherService extends Service {
                 mWallpaperManager.setBitmap(scaledBitmap);
 
                 SharedPreferences.Editor editor = mSettings.edit();
-                editor.putString(PREFENCES_URL, mImageUrl);
-                editor.putString(PREFENCES_PAGE_URL, mPageUrl);
-                editor.putString(PREFENCES_NAME, mName);
+                editor.putString(PREFERENCES_URL, mImageUrl);
+                editor.putString(PREFERENCES_PAGE_URL, mPageUrl);
+                editor.putString(PREFERENCES_NAME, mName);
                 editor.apply();
 
                 setStatusText(getString(R.string.status_complete));
 
                 bitmap.recycle();
                 croppedBitmap.recycle();
-                bitmap = null;
-                croppedBitmap = null;
 
             } catch (Exception e) {
                 setStatusText(String.format(getString(R.string.status_error), e.getMessage()));
@@ -322,6 +317,9 @@ public class WallpaperSwitcherService extends Service {
         boolean wifiOnly = mSettings.getBoolean("wifi_only", true);
         if (wifiOnly) {
             ConnectivityManager connectivityMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityMgr == null) {
+                return;
+            }
             NetworkInfo net = connectivityMgr.getActiveNetworkInfo();
             int netType = net.getType();
             if (netType != ConnectivityManager.TYPE_WIFI && netType != ConnectivityManager.TYPE_ETHERNET) {
@@ -329,7 +327,6 @@ public class WallpaperSwitcherService extends Service {
             }
         }
 
-        WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
         int desiredWidth = mWallpaperManager.getDesiredMinimumWidth();
@@ -339,10 +336,16 @@ public class WallpaperSwitcherService extends Service {
             displayMetrics.widthPixels = desiredWidth;
             displayMetrics.heightPixels = desiredHeight;
         } else {
-            windowManager.getDefaultDisplay().getMetrics(displayMetrics);
+            WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (windowManager != null) {
+                Display dd = windowManager.getDefaultDisplay();
+                if (dd != null) {
+                    dd.getMetrics(displayMetrics);
+                }
+            }
         }
 
-        switch (mSettings.getString(PREFENCES_MAIN_MODE, MODE_DISABLED)) {
+        switch (mSettings.getString(PREFERENCES_MAIN_MODE, MODE_DISABLED)) {
             case MODE_RANDOM_PICTURE:
                 isProcessing = true;
                 fireLoadingStateEvent();
@@ -367,12 +370,14 @@ public class WallpaperSwitcherService extends Service {
     }
 
     public String getMode() {
-        return mSettings.getString(PREFENCES_MAIN_MODE, MODE_DISABLED);
+        return mSettings.getString(PREFERENCES_MAIN_MODE, MODE_DISABLED);
     }
 
     public void stopAlarm() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(mPendingIntent);
+        if (alarmManager != null) {
+            alarmManager.cancel(mPendingIntent);
+        }
     }
 
     public void startAlarm() {
@@ -387,7 +392,9 @@ public class WallpaperSwitcherService extends Service {
 
         if (interval > 0) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, mPendingIntent);
+            if (alarmManager != null) {
+                alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, mPendingIntent);
+            }
         }
     }
 

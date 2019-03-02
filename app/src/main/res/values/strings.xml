@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">AutoWP.ru</string>
+    <string name="app_name">WheelsAge.org</string>
 
     <string name="update_wallpaper">Update wallpaper now</string>
-    <string name="shared_prefences_main">main</string>
+    <string name="shared_preferences_main">main</string>
     <string name="status_download_picture_info">Download picture information ...</string>
     <string name="status_error">Error: %s</string>
     <string name="status_picture_same">Picture still same</string>

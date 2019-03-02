@@ -21,8 +21,12 @@
         <Preference
             android:key="last_picture_name"
             android:title="@string/last_picture_name"
-
             android:defaultValue="None"/>
+
+        <Preference android:title="Go to https://wheelsage.org/" >
+            <intent android:action="android.intent.action.VIEW"
+                android:data="https://wheelsage.org/" />
+        </Preference>
 
         <EditTextPreference
             android:key="version"

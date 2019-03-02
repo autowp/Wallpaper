@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         View progress = findViewById(R.id.progressBar);
         progress.setVisibility(mService.isProcessing() ? View.VISIBLE : View.INVISIBLE);
 
-        TextView tvStatus = (TextView) findViewById(R.id.text_status);
+        TextView tvStatus = findViewById(R.id.text_status);
         tvStatus.setText(mService.getStatusTest());
     }
 
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView tvStatus = (TextView) findViewById(R.id.text_status);
+                TextView tvStatus = findViewById(R.id.text_status);
                 tvStatus.setText(status);
             }
         });
