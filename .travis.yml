@@ -1,0 +1,17 @@
+language: android
+android:
+  components:
+  # The BuildTools version used by your project
+  - build-tools-26.0.2
+
+  # The SDK version used to compile your project
+  - android-26
+
+addons:
+  sonarcloud:
+    organization: "autowp-github"
+    token:
+      secure: $SONARCLOUD_TOKEN
+
+script:
+- sonar-scanner || travis_terminate 1;
